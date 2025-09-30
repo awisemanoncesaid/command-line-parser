@@ -5,6 +5,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # --- Library ---
+
 set(LIBRARY_SOURCES
     src/CommandLineParser.cpp
 )
@@ -12,10 +13,55 @@ set(LIBRARY_SOURCES
 add_library(CommandLineParser STATIC ${LIBRARY_SOURCES})
 
 target_include_directories(CommandLineParser
-    PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include>
+)
+
+# --- Installation ---
+
+include(GNUInstallDirs)
+
+install(TARGETS CommandLineParser
+    EXPORT CommandLineParserTargets
+    INCLUDES DESTINATION include
+)
+
+install(DIRECTORY include/
+    DESTINATION include
+    FILES_MATCHING PATTERN "*.h"
+)
+
+install(EXPORT CommandLineParserTargets
+    FILE CommandLineParserTargets.cmake
+    NAMESPACE CommandLineParser::
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/CommandLineParser
+)
+
+# Create a ConfigVersion.cmake file
+
+include(CMakePackageConfigHelpers)
+
+write_basic_package_version_file(
+    "${CMAKE_CURRENT_BINARY_DIR}/CommandLineParserConfigVersion.cmake"
+    VERSION 1.0.0
+    COMPATIBILITY AnyNewerVersion
+)
+
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/CommandLineParserConfig.cmake.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/CommandLineParserConfig.cmake"
+    @ONLY
+)
+
+install(FILES
+    "${CMAKE_CURRENT_BINARY_DIR}/CommandLineParserConfig.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/CommandLineParserConfigVersion.cmake"
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/CommandLineParser
 )
 
 # --- Testing ---
+
 include(FetchContent)
 
 FetchContent_Declare(
